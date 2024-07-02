@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -10,7 +11,7 @@ public class PasswordField : MonoBehaviour
     public string Value { get => _value; private set => _passwordField.text = _passwordPlaceholderChar.RepeatString((_value = value).Length); } 
 
     [SerializeField] int _maxLength;
-    [SerializeField] string _password => cfg.Password;
+    [SerializeField] string _password => _cfg.Password;
     [SerializeField] string _passwordPlaceholderChar = "H";
 
     [SerializeField] UnityEvent OnLengthLimitExceeded;
@@ -20,10 +21,17 @@ public class PasswordField : MonoBehaviour
     [SerializeField] TMP_Text _passwordField;
     [SerializeField] TMP_Text _countdownField;
 
-    Config cfg;
+    Config _cfg;
+    DateTime _explosionTime;
     private void Awake()
     {
-        cfg = Config.Load();
+        _cfg = Config.Load();
+        _explosionTime = _cfg.ComputeActualExplosionTime();
+    }
+    private void Update()
+    {
+        var timeRemaining = _explosionTime - DateTime.Now;
+        _countdownField.text = $"{timeRemaining}\nexplosionTime: {_explosionTime}\n Attempts: {_cfg.NumberOfAttemptsFailedSoFar}";
     }
     public void AddCharacter(char toAdd)
     {
@@ -44,6 +52,8 @@ public class PasswordField : MonoBehaviour
 
     public void SubmitValue()
     {
+        if (string.IsNullOrEmpty(Value)) return;
+
         if(Value == _password)
         {
             OnValidPasswordEntered.Invoke();
@@ -51,6 +61,10 @@ public class PasswordField : MonoBehaviour
         else
         {
             OnInvalidPasswordEntered.Invoke();
+            Value = "";
+            _cfg.NumberOfAttemptsFailedSoFar += 1;
+            _explosionTime = _cfg.ComputeActualExplosionTime();
+            _cfg.Save();
         }
     }
     public void RemoveLastCharacter()

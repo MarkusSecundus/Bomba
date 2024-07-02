@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public static class Extensions
 {
@@ -47,8 +48,8 @@ public static class Extensions
     [System.Serializable] public struct FailPenaltyDefinition
     {
         public uint MaxAttempts;
-        [SerializeField] double _penaltySeconds;
-        public TimeSpan PenaltyTimeSpan { get => TimeSpan.FromSeconds(_penaltySeconds); set => _penaltySeconds = value.TotalSeconds; }
+        [SerializeField][FormerlySerializedAs("PenaltySeconds")] double PenaltySeconds;
+        public TimeSpan PenaltyTimeSpan { get => TimeSpan.FromSeconds(PenaltySeconds); set => PenaltySeconds = value.TotalSeconds; }
     }
 
     public static Config Default => new Config
